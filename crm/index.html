@@ -881,8 +881,8 @@ label.f textarea { resize: vertical; min-height: 64px; }
           .map(r => Array.from(r, v => String(v ?? ""))).filter(r => r.some(v => v.trim() !== ""));
       } else {
         let text = await readText(file, "utf-8");
-        if (text.includes("�")) text = await readText(file, "windows-1252");
-        text = text.replace(/^﻿/, "");
+        if (text.includes("\uFFFD")) text = await readText(file, "windows-1252");
+        text = text.replace(/^\uFEFF/, "");
         delim = detectDelimiter(text);
         rows = parseCSV(text, delim);
       }
