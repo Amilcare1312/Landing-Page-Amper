@@ -1,0 +1,1163 @@
+<title>CRM Amper Energia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* Layout: faixa verde de marca no topo, indicadores do funil, depois o quadro por etapa (ou lista) e uma gaveta lateral com a ficha do lead. */
+:root {
+  --bg: #F4F8F6;
+  --surface: #FFFFFF;
+  --surface-2: #EEF5F1;
+  --line: #D5E3DC;
+  --fg: #14231F;
+  --muted: #4A5B55;
+  --brand: #05705A;
+  --brand-ink: #FFFFFF;
+  --brand-deep: #0A3B30;
+  --sun: #F7A21B;
+  --sun-soft: #FEF1D9;
+  --hot: #B4421F;
+  --hot-soft: #F8E4DC;
+  --warm: #A86A00;
+  --warm-soft: #FEF1D9;
+  --cold: #3E6A86;
+  --cold-soft: #E3EDF3;
+  --ok: #05705A;
+  --ok-soft: #DCEDE5;
+  --shadow: 0 10px 30px rgba(10, 59, 48, .14);
+  --font-display: "Bricolage Grotesque", "Figtree", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1714; --surface: #12211D; --surface-2: #172B26; --line: #24403A;
+    --fg: #E4EFEA; --muted: #9DB3AB; --brand: #2FA285; --brand-ink: #04211A; --brand-deep: #08291F;
+    --sun: #F7A21B; --sun-soft: #3A2B10; --hot: #F08A66; --hot-soft: #3B1F16;
+    --warm: #F2B544; --warm-soft: #352A12; --cold: #8DB8D4; --cold-soft: #182A35;
+    --ok: #5CC8A6; --ok-soft: #173A30; --shadow: 0 10px 30px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1714; --surface: #12211D; --surface-2: #172B26; --line: #24403A;
+  --fg: #E4EFEA; --muted: #9DB3AB; --brand: #2FA285; --brand-ink: #04211A; --brand-deep: #08291F;
+  --sun: #F7A21B; --sun-soft: #3A2B10; --hot: #F08A66; --hot-soft: #3B1F16;
+  --warm: #F2B544; --warm-soft: #352A12; --cold: #8DB8D4; --cold-soft: #182A35;
+  --ok: #5CC8A6; --ok-soft: #173A30; --shadow: 0 10px 30px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+html, body { min-height: 100%; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 14px; line-height: 1.45;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--brand-deep);
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--sun); outline-offset: 2px; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Topo */
+.top { background: var(--brand-deep); color: #FFFFFF; }
+.top .wrap { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-block: 14px; }
+.brand { display: flex; align-items: center; gap: 12px; margin-right: auto; min-width: 0; }
+.brand img { width: 34px; height: auto; }
+.brand h1 { font-family: var(--font-display); font-size: 21px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.brand small { display: block; font-size: 12px; color: #A9C9BE; font-weight: 500; }
+.top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--fg); border-radius: 8px; padding: 8px 12px; font-weight: 600; font-size: 13px;
+}
+.btn:hover { border-color: var(--brand); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.btn.sun { background: var(--sun); border-color: var(--sun); color: #2A1A00; }
+.btn.ghost-on-dark { background: transparent; color: #FFFFFF; border-color: rgba(255,255,255,.28); }
+.btn.ghost-on-dark:hover { border-color: #FFFFFF; }
+.btn.danger { color: var(--hot); border-color: var(--hot-soft); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.btn svg { width: 16px; height: 16px; }
+
+/* Indicadores */
+.kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-block: 18px 14px; }
+.kpi { background: var(--surface); padding: 12px 14px; min-width: 0; }
+.kpi .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+.kpi .val { font-family: var(--font-display); font-size: 26px; font-weight: 700; margin-top: 2px; }
+.kpi .sub { font-size: 12px; color: var(--muted); }
+.kpi.alert .val { color: var(--hot); }
+@media (max-width: 820px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpi:last-child { grid-column: span 2; } }
+
+/* Barra de filtros */
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.toolbar input[type=search] { flex: 1 1 220px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.toolbar select { padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: transparent; padding: 8px 14px; font-weight: 600; font-size: 13px; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); }
+.store-note { font-size: 12px; color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.dot.on { background: var(--ok); }
+
+/* Quadro */
+.board { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(250px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 24px; }
+.col { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); display: flex; flex-direction: column; min-height: 200px; min-width: 0; }
+.col header { padding: 10px 12px; display: flex; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--line); }
+.col header h3 { margin: 0; font-size: 13px; font-weight: 700; }
+.col header .count { font-size: 12px; color: var(--muted); margin-left: auto; }
+.col .list { padding: 10px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.col.drop { outline: 2px dashed var(--brand); outline-offset: -4px; }
+.col.won header h3 { color: var(--ok); }
+.col.lost header h3 { color: var(--muted); }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 10px 10px 12px; text-align: left; width: 100%;
+  display: grid; gap: 6px; position: relative; box-shadow: none;
+}
+.card:hover { border-color: var(--brand); }
+.card[draggable="true"] { cursor: grab; }
+.card .row1 { display: flex; gap: 8px; align-items: flex-start; }
+.card .name { font-weight: 700; font-size: 14px; line-height: 1.25; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.card .meta { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.card .facts { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 99px; background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.chip.svc { background: var(--sun-soft); color: var(--warm); border-color: transparent; }
+.chip.late { background: var(--hot-soft); color: var(--hot); border-color: transparent; }
+.chip.ex { border-style: dashed; }
+.score { font-family: var(--font-display); font-weight: 700; font-size: 13px; min-width: 40px; text-align: center; padding: 2px 6px; border-radius: 6px; }
+.t-quente { background: var(--hot-soft); color: var(--hot); }
+.t-morno { background: var(--warm-soft); color: var(--warm); }
+.t-frio { background: var(--cold-soft); color: var(--cold); }
+.empty-col { font-size: 12px; color: var(--muted); padding: 6px 2px; }
+
+/* Lista */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); margin-bottom: 24px; }
+table { width: 100%; border-collapse: collapse; min-width: 860px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 700; background: var(--surface-2); cursor: pointer; user-select: none; white-space: nowrap; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--surface-2); }
+td.r, th.r { text-align: right; }
+
+/* Estado vazio */
+.empty { border: 1px dashed var(--line); border-radius: var(--radius); background: var(--surface); padding: 36px 20px; text-align: center; margin-bottom: 24px; }
+.empty h2 { font-family: var(--font-display); margin: 0 0 6px; font-size: 22px; text-wrap: balance; }
+.empty p { color: var(--muted); max-width: 52ch; margin: 0 auto 16px; }
+.empty .acts { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+/* Gaveta e modais */
+.scrim { position: fixed; inset: 0; background: rgba(6, 28, 22, .45); z-index: 40; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(560px, 100%); background: var(--bg); z-index: 50;
+  display: flex; flex-direction: column; box-shadow: var(--shadow);
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+.drawer > header { padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--surface); display: flex; gap: 12px; align-items: center; }
+.drawer > header h2 { margin: 0; font-family: var(--font-display); font-size: 19px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.drawer .body { overflow-y: auto; padding: 16px 18px 24px; display: grid; gap: 18px; }
+.drawer > footer { padding: 12px 18px; border-top: 1px solid var(--line); background: var(--surface); display: flex; gap: 8px; flex-wrap: wrap; }
+.drawer > footer .spacer { flex: 1; }
+.x { border: 0; background: transparent; font-size: 22px; line-height: 1; padding: 4px 8px; color: var(--muted); }
+fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+legend { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--brand); font-weight: 700; margin-bottom: 8px; padding: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+label.f { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); min-width: 0; }
+label.f input, label.f select, label.f textarea { padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); font-weight: 400; font-size: 14px; width: 100%; min-width: 0; }
+label.f textarea { resize: vertical; min-height: 64px; }
+.qual { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: grid; gap: 12px; }
+.qual-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.gauge { font-family: var(--font-display); font-size: 34px; font-weight: 700; line-height: 1; }
+.bar { height: 8px; background: var(--surface-2); border-radius: 99px; overflow: hidden; flex: 1 1 140px; }
+.bar > i { display: block; height: 100%; background: var(--brand); border-radius: 99px; }
+.est { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.est div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.est b { display: block; font-family: var(--font-display); font-size: 17px; }
+.est span { font-size: 11px; color: var(--muted); }
+.breakdown { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.hist { display: grid; gap: 8px; }
+.hist-item { border-left: 3px solid var(--line); padding: 2px 0 2px 10px; }
+.hist-item time { font-size: 11px; color: var(--muted); }
+.hist-item p { margin: 2px 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.note-add { display: flex; gap: 8px; }
+.note-add input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+.contact-line { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13px; }
+.contact-line a { color: var(--brand); font-weight: 600; }
+
+.modal {
+  position: fixed; z-index: 50; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(760px, calc(100% - 24px)); max-height: calc(100% - 40px); background: var(--bg);
+  border-radius: 12px; box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden;
+}
+.modal > header { padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; gap: 10px; }
+.modal > header h2 { margin: 0; font-family: var(--font-display); font-size: 19px; flex: 1; }
+.modal .body { padding: 16px 18px; overflow-y: auto; display: grid; gap: 14px; }
+.modal > footer { padding: 12px 18px; border-top: 1px solid var(--line); background: var(--surface); display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
+.modal > footer .info { margin-right: auto; font-size: 12px; color: var(--muted); }
+.dropzone { border: 2px dashed var(--line); border-radius: var(--radius); padding: 28px 16px; text-align: center; background: var(--surface); }
+.dropzone.over { border-color: var(--brand); background: var(--surface-2); }
+.dropzone p { margin: 6px 0; color: var(--muted); }
+.map-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.preview { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.preview table { min-width: 600px; font-size: 12px; }
+.preview th { cursor: default; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; }
+.opts { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+.opts label { display: inline-flex; gap: 6px; align-items: center; }
+.progress { height: 6px; background: var(--surface-2); border-radius: 99px; overflow: hidden; }
+.progress > i { display: block; height: 100%; width: 0; background: var(--sun); transition: width .2s; }
+.confirm { background: var(--hot-soft); color: var(--hot); border-radius: 8px; padding: 10px 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; font-weight: 600; width: 100%; }
+
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+  background: var(--brand-deep); color: #FFFFFF; padding: 10px 16px; border-radius: 8px; font-weight: 600; box-shadow: var(--shadow); max-width: calc(100% - 32px);
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="Amper Energia">
+      <div><h1>CRM de Leads</h1><small>Amper Energia · qualificação comercial</small></div>
+    </div>
+    <div class="top-actions">
+      <button class="btn sun" id="btnImport" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg>Importar planilha</button>
+      <button class="btn ghost-on-dark" id="btnNew" type="button">+ Novo lead</button>
+      <button class="btn ghost-on-dark" id="btnExport" type="button">Exportar CSV</button>
+      <button class="btn ghost-on-dark" id="btnSettings" type="button" aria-label="Parâmetros de cálculo">Parâmetros</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="kpis" id="kpis" aria-label="Indicadores"></section>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Buscar por nome, empresa, cidade, telefone…" aria-label="Buscar">
+    <select id="fTemp" aria-label="Filtrar por temperatura">
+      <option value="">Todas as temperaturas</option>
+      <option value="quente">Quentes (70+)</option>
+      <option value="morno">Mornos (40–69)</option>
+      <option value="frio">Frios (&lt;40)</option>
+    </select>
+    <select id="fSvc" aria-label="Filtrar por serviço"></select>
+    <select id="fTipo" aria-label="Filtrar por tipo de cliente"></select>
+    <div class="seg" role="group" aria-label="Visualização">
+      <button type="button" id="vBoard" aria-pressed="true">Funil</button>
+      <button type="button" id="vList" aria-pressed="false">Lista</button>
+    </div>
+    <span class="store-note" id="storeNote"><span class="dot"></span>Conectando…</span>
+  </div>
+
+  <section id="view"></section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<aside class="drawer" id="drawer" hidden aria-labelledby="dTitle">
+  <header>
+    <h2 id="dTitle">Lead</h2>
+    <button class="x" type="button" id="dClose" aria-label="Fechar">×</button>
+  </header>
+  <form class="body" id="leadForm" autocomplete="off">
+    <div class="qual" id="qualBox"></div>
+
+    <fieldset>
+      <legend>Contato</legend>
+      <div class="grid2">
+        <label class="f">Nome *<input id="f_nome" name="nome" required></label>
+        <label class="f">Empresa<input id="f_empresa" name="empresa"></label>
+        <label class="f">Telefone / WhatsApp<input id="f_telefone" name="telefone" inputmode="tel"></label>
+        <label class="f">E-mail<input id="f_email" name="email" type="email"></label>
+        <label class="f">Cidade<input id="f_cidade" name="cidade"></label>
+        <label class="f">UF<input id="f_uf" name="uf" maxlength="2"></label>
+      </div>
+      <div class="contact-line" id="contactLine"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Perfil de consumo</legend>
+      <div class="grid2">
+        <label class="f">Tipo de cliente<select id="f_tipo" name="tipo"></select></label>
+        <label class="f">Serviço de interesse<select id="f_servico" name="servico"></select></label>
+        <label class="f">Consumo médio (kWh/mês)<input id="f_consumo" name="consumo" inputmode="decimal"></label>
+        <label class="f">Valor da conta (R$/mês)<input id="f_conta" name="conta" inputmode="decimal"></label>
+        <label class="f">Concessionária<input id="f_concessionaria" name="concessionaria" list="concList"></label>
+        <label class="f">Origem do lead<input id="f_origem" name="origem" list="origemList"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Qualificação</legend>
+      <div class="grid2">
+        <label class="f">Fala com o decisor?<select id="f_decisor" name="decisor"></select></label>
+        <label class="f">Prazo para decidir<select id="f_prazo" name="prazo"></select></label>
+        <label class="f">Forma de pagamento<select id="f_pagamento" name="pagamento"></select></label>
+        <label class="f">Telhado / área para instalação<select id="f_area" name="area"></select></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Funil e próxima ação</legend>
+      <div class="grid2">
+        <label class="f">Etapa<select id="f_etapa" name="etapa"></select></label>
+        <label class="f">Data do follow-up<input id="f_followup" name="followup" type="date"></label>
+      </div>
+      <label class="f">Próxima ação<input id="f_proxima" name="proxima" placeholder="Ex.: agendar visita técnica, enviar proposta…"></label>
+      <label class="f" id="motivoWrap" hidden>Motivo da perda<input id="f_motivo" name="motivo" list="motivoList"></label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Histórico</legend>
+      <div class="note-add">
+        <input id="noteText" placeholder="Registrar ligação, visita, retorno…" aria-label="Nova anotação">
+        <button class="btn" type="button" id="noteAdd">Anotar</button>
+      </div>
+      <div class="hist" id="hist"></div>
+    </fieldset>
+  </form>
+  <footer>
+    <div id="delArea"><button class="btn danger" type="button" id="dDelete">Excluir</button></div>
+    <span class="spacer"></span>
+    <button class="btn" type="button" id="dCancel">Cancelar</button>
+    <button class="btn primary" type="submit" form="leadForm" id="dSave">Salvar lead</button>
+  </footer>
+</aside>
+
+<div class="modal" id="importModal" hidden role="dialog" aria-labelledby="iTitle">
+  <header><h2 id="iTitle">Importar leads (CSV ou Excel)</h2><button class="x" type="button" data-close aria-label="Fechar">×</button></header>
+  <div class="body" id="iBody"></div>
+  <footer id="iFoot"></footer>
+</div>
+
+<div class="modal" id="setModal" hidden role="dialog" aria-labelledby="sTitle">
+  <header><h2 id="sTitle">Parâmetros de cálculo</h2><button class="x" type="button" data-close aria-label="Fechar">×</button></header>
+  <form class="body" id="setForm">
+    <p class="hint">Usados para estimar a potência do sistema, o investimento e o consumo quando o lead só informou o valor da conta.</p>
+    <div class="grid2">
+      <label class="f">Irradiação (HSP, kWh/m²·dia)<input id="s_hsp" inputmode="decimal"></label>
+      <label class="f">Performance ratio (PR)<input id="s_pr" inputmode="decimal"></label>
+      <label class="f">Preço médio (R$/kWp instalado)<input id="s_preco" inputmode="decimal"></label>
+      <label class="f">Tarifa média (R$/kWh com impostos)<input id="s_tarifa" inputmode="decimal"></label>
+      <label class="f">Potência por módulo (Wp)<input id="s_modulo" inputmode="decimal"></label>
+    </div>
+    <p class="hint">kWp = consumo ÷ (HSP × 30 × PR). Economia mensal estimada = consumo × tarifa × 90%, considerando o custo de disponibilidade.</p>
+  </form>
+  <footer><button class="btn" type="button" data-close>Cancelar</button><button class="btn primary" type="submit" form="setForm">Salvar parâmetros</button></footer>
+</div>
+
+<datalist id="concList"><option>EDP SP</option><option>Enel SP</option><option>CPFL Paulista</option><option>CPFL Piratininga</option><option>Neoenergia Elektro</option><option>Energisa</option><option>Cemig</option><option>Light</option></datalist>
+<datalist id="origemList"><option>Indicação</option><option>Instagram</option><option>Google</option><option>Site</option><option>WhatsApp</option><option>Feira / evento</option><option>Prospecção ativa</option><option>Parceiro</option></datalist>
+<datalist id="motivoList"><option>Preço</option><option>Fechou com concorrente</option><option>Sem crédito / financiamento negado</option><option>Telhado inviável</option><option>Desistiu / adiou</option><option>Sem retorno</option></datalist>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------- Domínio ----------
+  const ETAPAS = [
+    ["novo", "Novo"], ["contato", "Contato feito"], ["qualificado", "Qualificado"],
+    ["visita", "Visita técnica"], ["proposta", "Proposta enviada"], ["negociacao", "Negociação"],
+    ["ganho", "Ganho"], ["perdido", "Perdido"]
+  ];
+  const ETAPA_LABEL = Object.fromEntries(ETAPAS);
+  const TIPOS = [["residencial", "Residencial"], ["comercial", "Comercial"], ["industrial", "Industrial"], ["rural", "Rural / agro"], ["publico", "Poder público"]];
+  const SERVICOS = [["fv", "Usina fotovoltaica"], ["projeto", "Projeto elétrico"], ["termografia", "Inspeção termográfica"], ["spda", "Laudo de SPDA"], ["icms", "Crédito de ICMS"], ["outro", "Outro"]];
+  const DECISOR = [["", "Não informado"], ["sim", "Sim, é o decisor"], ["influencia", "Influencia a decisão"], ["nao", "Não"]];
+  const PRAZO = [["", "Não informado"], ["imediato", "Até 30 dias"], ["1-3", "1 a 3 meses"], ["3-6", "3 a 6 meses"], ["6+", "Mais de 6 meses / sem previsão"]];
+  const PAGAMENTO = [["", "Não informado"], ["avista", "À vista"], ["financiamento", "Financiamento aprovado ou em análise"], ["indefinido", "Ainda não sabe"]];
+  const AREA = [["", "Não informado"], ["adequada", "Própria e adequada"], ["avaliar", "Precisa de avaliação"], ["nao", "Não possui"]];
+  const lab = (arr, v) => (arr.find(a => a[0] === v) || [, ""])[1];
+
+  const DEFAULT_CFG = { hsp: 4.6, pr: 0.80, preco: 3800, tarifa: 0.95, modulo: 610 };
+  let cfg = { ...DEFAULT_CFG };
+
+  const num = v => {
+    if (v === null || v === undefined || v === "") return null;
+    if (typeof v === "number") return isFinite(v) ? v : null;
+    let s = String(v).replace(/[^\d,.\-]/g, "");
+    if (!s) return null;
+    if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
+    const n = parseFloat(s);
+    return isFinite(n) ? n : null;
+  };
+  const fmt = (n, d = 0) => n == null ? "—" : n.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const brl = n => n == null ? "—" : n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  const todayISO = () => { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); };
+
+  function consumoEfetivo(l) {
+    const c = num(l.consumo);
+    if (c) return { kwh: c, estimado: false };
+    const r = num(l.conta);
+    if (r && cfg.tarifa) return { kwh: r / cfg.tarifa, estimado: true };
+    return { kwh: null, estimado: false };
+  }
+
+  // Pontuação de 0 a 100 para qualificação (BANT adaptado a energia)
+  function score(l) {
+    const parts = [];
+    const { kwh } = consumoEfetivo(l);
+    let p = 0;
+    if (l.servico && l.servico !== "fv") {
+      // Serviços técnicos: porte medido pelo tipo de cliente, consumo pesa menos
+      p = kwh == null ? 8 : kwh >= 5000 ? 35 : kwh >= 1500 ? 28 : kwh >= 500 ? 18 : 10;
+    } else {
+      p = kwh == null ? 0 : kwh >= 3000 ? 35 : kwh >= 1000 ? 28 : kwh >= 500 ? 20 : kwh >= 300 ? 12 : 5;
+    }
+    parts.push(["Consumo", p, 35]);
+    const tipoP = { industrial: 15, comercial: 12, rural: 10, publico: 8, residencial: 6 }[l.tipo] ?? 0;
+    parts.push(["Perfil", tipoP, 15]);
+    const decP = { sim: 15, influencia: 8, nao: 2 }[l.decisor] ?? 0;
+    parts.push(["Decisor", decP, 15]);
+    const prP = { imediato: 15, "1-3": 10, "3-6": 5, "6+": 0 }[l.prazo] ?? 0;
+    parts.push(["Prazo", prP, 15]);
+    const pgP = { avista: 10, financiamento: 8, indefinido: 3 }[l.pagamento] ?? 0;
+    parts.push(["Pagamento", pgP, 10]);
+    let arP = { adequada: 10, avaliar: 5, nao: 0 }[l.area] ?? 0;
+    if (l.servico && l.servico !== "fv") arP = 10; // área não se aplica a laudos e projetos
+    parts.push([l.servico && l.servico !== "fv" ? "Área (n/a)" : "Área", arP, 10]);
+    const total = parts.reduce((s, x) => s + x[1], 0);
+    return { total, parts };
+  }
+  const temp = s => s >= 70 ? "quente" : s >= 40 ? "morno" : "frio";
+  const TEMP_LABEL = { quente: "Quente", morno: "Morno", frio: "Frio" };
+
+  function estimativa(l) {
+    const { kwh, estimado } = consumoEfetivo(l);
+    if (!kwh) return null;
+    const kwp = kwh / (cfg.hsp * 30 * cfg.pr);
+    return {
+      kwh, estimado, kwp,
+      modulos: Math.ceil((kwp * 1000) / cfg.modulo),
+      invest: kwp * cfg.preco,
+      economia: kwh * cfg.tarifa * 0.9
+    };
+  }
+  const isLate = l => l.followup && l.followup < todayISO() && !["ganho", "perdido"].includes(l.etapa);
+
+  // ---------- Armazenamento ----------
+  let leads = new Map();
+  let mode = "local";
+  let db = null, dl = null;
+  const LS_KEY = "amper-crm-leads-v1", LS_CFG = "amper-crm-cfg-v1";
+
+  const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
+  const newId = () => "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  async function writeLead(id, data, attempt = 0) {
+    if (mode === "db") {
+      try { await db.collection("leads").doc(id).set(data); }
+      catch (e) {
+        if ((e?.code === "unavailable" || e?.code === "resource_exhausted") && attempt < 4) {
+          await sleep(400 * 2 ** attempt + Math.random() * 300);
+          return writeLead(id, data, attempt + 1);
+        }
+        throw e;
+      }
+    } else {
+      leads.set(id, data);
+      const obj = Object.fromEntries(leads);
+      if (!lsSet(LS_KEY, obj)) throw { code: "local", message: "O navegador não permitiu salvar." };
+      render();
+    }
+  }
+  async function deleteLead(id) {
+    if (mode === "db") await db.collection("leads").doc(id).delete();
+    else { leads.delete(id); lsSet(LS_KEY, Object.fromEntries(leads)); render(); }
+  }
+  async function saveCfg(c) {
+    cfg = { ...DEFAULT_CFG, ...c };
+    if (mode === "db") await db.doc("config/geral").set(cfg);
+    else lsSet(LS_CFG, cfg);
+    render();
+  }
+
+  function setNote(text, on) {
+    $("#storeNote").innerHTML = `<span class="dot ${on ? "on" : ""}"></span>`;
+    $("#storeNote").append(text);
+  }
+
+  function useLocal() {
+    mode = "local";
+    const saved = lsGet(LS_KEY) || {};
+    leads = new Map(Object.entries(saved));
+    const c = lsGet(LS_CFG); if (c) cfg = { ...DEFAULT_CFG, ...c };
+    setNote("Salvo neste navegador", false);
+    render();
+  }
+
+  async function initStore() {
+    let ready = false;
+    const fallback = setTimeout(() => { if (!ready) useLocal(); }, 10000);
+    const claude = window.claude;
+    if (!claude || typeof claude.use !== "function") { clearTimeout(fallback); useLocal(); initDownloads(); return; }
+    try { db = await claude.use("db"); } catch { db = null; }
+    initDownloads();
+    if (!db) { clearTimeout(fallback); useLocal(); return; }
+    mode = "db";
+    setNote("Carregando leads…", false);
+    db.collection("leads").onSnapshot(snap => {
+      ready = true; clearTimeout(fallback);
+      const m = new Map();
+      snap.docs.forEach(d => m.set(d.id, d.data()));
+      leads = m;
+      setNote(snap.metadata.fromCache ? "Sincronizando…" : "Salvo na nuvem", !snap.metadata.fromCache);
+      render();
+      if (current && !leads.has(current.id) && !current.isNew) closeDrawer();
+    }, e => {
+      clearTimeout(fallback);
+      setNote("Não foi possível carregar os leads (" + (e?.code || "erro") + ")", false);
+    });
+    db.doc("config/geral").onSnapshot(s => {
+      if (s.exists) { cfg = { ...DEFAULT_CFG, ...s.data() }; render(); }
+    }, () => {});
+  }
+  async function initDownloads() {
+    try { dl = window.claude?.use ? await window.claude.use("downloads") : null; } catch { dl = null; }
+  }
+
+  // ---------- Helpers de UI ----------
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let toastT;
+  function toast(msg) {
+    const t = $("#toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 3200);
+  }
+  const fillSelect = (el, arr, first) => {
+    el.innerHTML = (first ? `<option value="">${esc(first)}</option>` : "") + arr.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+  };
+  const waLink = tel => {
+    let d = String(tel || "").replace(/\D/g, "");
+    if (!d) return null;
+    if (d.length <= 11) d = "55" + d;
+    return "https://wa.me/" + d;
+  };
+  const fmtDate = iso => iso ? iso.split("-").reverse().join("/") : "";
+
+  // ---------- Estado de visualização ----------
+  let view = "board";
+  try { view = localStorage.getItem("amper-crm-view") || "board"; } catch {}
+  let sortKey = "score", sortDir = -1;
+
+  function filtered() {
+    const q = $("#q").value.trim().toLowerCase();
+    const ft = $("#fTemp").value, fs = $("#fSvc").value, fp = $("#fTipo").value;
+    const out = [];
+    for (const [id, l] of leads) {
+      const s = score(l).total;
+      if (ft && temp(s) !== ft) continue;
+      if (fs && l.servico !== fs) continue;
+      if (fp && l.tipo !== fp) continue;
+      if (q) {
+        const hay = [l.nome, l.empresa, l.cidade, l.telefone, l.email, l.concessionaria, l.origem].join(" ").toLowerCase();
+        if (!hay.includes(q)) continue;
+      }
+      out.push({ id, l, s });
+    }
+    return out;
+  }
+
+  function renderKpis(all) {
+    const ativos = all.filter(x => !["ganho", "perdido"].includes(x.l.etapa));
+    const quentes = ativos.filter(x => x.s >= 70).length;
+    let kwp = 0, inv = 0;
+    ativos.forEach(x => { const e = estimativa(x.l); if (e) { kwp += e.kwp; inv += e.invest; } });
+    const atrasados = ativos.filter(x => isLate(x.l)).length;
+    const ganhos = all.filter(x => x.l.etapa === "ganho").length;
+    const fechados = ganhos + all.filter(x => x.l.etapa === "perdido").length;
+    $("#kpis").innerHTML = `
+      <div class="kpi"><div class="lbl">Leads ativos</div><div class="val num">${fmt(ativos.length)}</div><div class="sub">${fmt(all.length)} no total</div></div>
+      <div class="kpi"><div class="lbl">Leads quentes</div><div class="val num">${fmt(quentes)}</div><div class="sub">pontuação 70 ou mais</div></div>
+      <div class="kpi"><div class="lbl">Potência em aberto</div><div class="val num">${fmt(kwp, 1)} <small style="font-size:14px">kWp</small></div><div class="sub">${brl(inv)} estimados</div></div>
+      <div class="kpi ${atrasados ? "alert" : ""}"><div class="lbl">Follow-ups atrasados</div><div class="val num">${fmt(atrasados)}</div><div class="sub">${atrasados ? "retome hoje" : "tudo em dia"}</div></div>
+      <div class="kpi"><div class="lbl">Taxa de conversão</div><div class="val num">${fechados ? fmt(100 * ganhos / fechados) + "%" : "—"}</div><div class="sub">${fmt(ganhos)} ganhos de ${fmt(fechados)} encerrados</div></div>`;
+  }
+
+  function cardHTML({ id, l, s }) {
+    const t = temp(s);
+    const e = estimativa(l);
+    const late = isLate(l);
+    return `<button type="button" class="card" draggable="true" data-id="${esc(id)}">
+      <div class="row1"><span class="name">${esc(l.nome || "(sem nome)")}</span><span class="score num t-${t}" title="${TEMP_LABEL[t]}">${s}</span></div>
+      ${l.empresa || l.cidade ? `<div class="meta">${esc([l.empresa, l.cidade].filter(Boolean).join(" · "))}</div>` : ""}
+      <div class="facts">
+        ${l.servico ? `<span class="chip svc">${esc(lab(SERVICOS, l.servico))}</span>` : ""}
+        ${e ? `<span class="chip num">${fmt(e.kwh)} kWh · ${fmt(e.kwp, 1)} kWp</span>` : ""}
+        ${l.followup ? `<span class="chip num ${late ? "late" : ""}">${late ? "Atrasado " : "Retorno "}${fmtDate(l.followup)}</span>` : ""}
+        ${l.exemplo ? `<span class="chip ex">exemplo</span>` : ""}
+      </div>
+    </button>`;
+  }
+
+  function renderBoard(list) {
+    const byStage = Object.fromEntries(ETAPAS.map(([k]) => [k, []]));
+    list.forEach(x => (byStage[x.l.etapa] || byStage.novo).push(x));
+    Object.values(byStage).forEach(a => a.sort((a, b) => (isLate(b.l) - isLate(a.l)) || b.s - a.s));
+    $("#view").innerHTML = `<div class="board">${ETAPAS.map(([k, t]) => `
+      <section class="col ${k === "ganho" ? "won" : k === "perdido" ? "lost" : ""}" data-stage="${k}">
+        <header><h3>${t}</h3><span class="count num">${byStage[k].length}</span></header>
+        <div class="list">${byStage[k].map(cardHTML).join("") || `<div class="empty-col">Arraste um lead para cá</div>`}</div>
+      </section>`).join("")}</div>`;
+  }
+
+  function renderList(list) {
+    const val = (x, k) => {
+      if (k === "score") return x.s;
+      if (k === "kwh") return estimativa(x.l)?.kwh ?? -1;
+      if (k === "kwp") return estimativa(x.l)?.kwp ?? -1;
+      if (k === "etapa") return ETAPAS.findIndex(e => e[0] === x.l.etapa);
+      return String(x.l[k] || "").toLowerCase();
+    };
+    list.sort((a, b) => { const A = val(a, sortKey), B = val(b, sortKey); return (A > B ? 1 : A < B ? -1 : 0) * sortDir; });
+    const cols = [["nome", "Nome"], ["cidade", "Cidade"], ["tipo", "Tipo"], ["servico", "Serviço"], ["kwh", "kWh/mês", "r"], ["kwp", "kWp est.", "r"], ["score", "Pontos", "r"], ["etapa", "Etapa"], ["followup", "Follow-up"]];
+    $("#view").innerHTML = `<div class="table-wrap"><table>
+      <thead><tr>${cols.map(([k, t, c]) => `<th class="${c || ""}" data-sort="${k}" aria-sort="${sortKey === k ? (sortDir > 0 ? "ascending" : "descending") : "none"}">${t}${sortKey === k ? (sortDir > 0 ? " ↑" : " ↓") : ""}</th>`).join("")}</tr></thead>
+      <tbody>${list.map(x => {
+        const e = estimativa(x.l), t = temp(x.s), late = isLate(x.l);
+        return `<tr data-id="${esc(x.id)}">
+          <td><b>${esc(x.l.nome || "(sem nome)")}</b>${x.l.empresa ? `<div class="meta" style="font-size:12px;color:var(--muted)">${esc(x.l.empresa)}</div>` : ""}</td>
+          <td>${esc(x.l.cidade || "")}</td>
+          <td>${esc(lab(TIPOS, x.l.tipo))}</td>
+          <td>${esc(lab(SERVICOS, x.l.servico))}</td>
+          <td class="r num">${e ? fmt(e.kwh) + (e.estimado ? "*" : "") : "—"}</td>
+          <td class="r num">${e ? fmt(e.kwp, 1) : "—"}</td>
+          <td class="r"><span class="score num t-${t}">${x.s}</span></td>
+          <td>${esc(ETAPA_LABEL[x.l.etapa] || "Novo")}</td>
+          <td class="num">${x.l.followup ? `<span class="chip ${late ? "late" : ""}">${fmtDate(x.l.followup)}</span>` : ""}</td>
+        </tr>`;
+      }).join("")}</tbody></table></div>
+      <p class="hint" style="margin:-14px 0 24px">* consumo estimado a partir do valor da conta.</p>`;
+  }
+
+  function renderEmpty() {
+    $("#view").innerHTML = `<div class="empty">
+      <h2>Nenhum lead cadastrado ainda</h2>
+      <p>Importe a planilha de contatos em CSV ou Excel (.xlsx), incluindo a exportação de leads do Meta Ads (Instagram/Facebook), Google Planilhas ou RD Station, ou cadastre o primeiro lead manualmente. Cada lead recebe uma pontuação de 0 a 100 e a estimativa de kWp.</p>
+      <div class="acts">
+        <button class="btn sun" type="button" data-act="import">Importar planilha</button>
+        <button class="btn" type="button" data-act="new">Cadastrar lead</button>
+        <button class="btn" type="button" data-act="model">Baixar modelo de CSV</button>
+      </div></div>`;
+  }
+
+  function render() {
+    const all = [...leads].map(([id, l]) => ({ id, l, s: score(l).total }));
+    renderKpis(all);
+    $("#vBoard").setAttribute("aria-pressed", view === "board");
+    $("#vList").setAttribute("aria-pressed", view === "list");
+    if (!leads.size) return renderEmpty();
+    const list = filtered();
+    if (!list.length) { $("#view").innerHTML = `<div class="empty"><h2>Nenhum lead com esses filtros</h2><p>Limpe a busca ou troque os filtros acima.</p></div>`; return; }
+    view === "list" ? renderList(list) : renderBoard(list);
+  }
+
+  // ---------- Gaveta do lead ----------
+  let current = null; // { id, data, isNew }
+  const FIELDS = ["nome", "empresa", "telefone", "email", "cidade", "uf", "tipo", "servico", "consumo", "conta", "concessionaria", "origem", "decisor", "prazo", "pagamento", "area", "etapa", "followup", "proxima", "motivo"];
+
+  function formData() {
+    const d = { ...(current?.data || {}) };
+    FIELDS.forEach(f => { const el = $("#f_" + f); if (el) d[f] = el.value.trim(); });
+    d.uf = (d.uf || "").toUpperCase();
+    d.consumo = num(d.consumo); d.conta = num(d.conta);
+    return d;
+  }
+
+  function renderQual() {
+    const d = formData();
+    const sc = score(d), t = temp(sc.total), e = estimativa(d);
+    $("#qualBox").innerHTML = `
+      <div class="qual-head">
+        <span class="gauge num">${sc.total}<small style="font-size:14px;color:var(--muted)">/100</small></span>
+        <span class="score t-${t}" style="font-size:14px">${TEMP_LABEL[t]}</span>
+        <div class="bar" aria-hidden="true"><i style="width:${sc.total}%;background:var(--${t === "quente" ? "hot" : t === "morno" ? "warm" : "cold"})"></i></div>
+      </div>
+      <div class="breakdown num">${sc.parts.map(([n, p, m]) => `<span>${n} <b>${p}</b>/${m}</span>`).join("")}</div>
+      ${e ? `<div class="est">
+        <div><b class="num">${fmt(e.kwp, 2)} kWp</b><span>${fmt(e.modulos)} módulos de ${fmt(cfg.modulo)} Wp</span></div>
+        <div><b class="num">${brl(e.invest)}</b><span>investimento estimado</span></div>
+        <div><b class="num">${brl(e.economia)}</b><span>economia/mês${e.estimado ? " · consumo estimado" : ""}</span></div>
+      </div>` : `<p class="hint">Informe o consumo em kWh ou o valor da conta para estimar potência e investimento.</p>`}`;
+    $("#motivoWrap").hidden = $("#f_etapa").value !== "perdido";
+    const tel = $("#f_telefone").value, mail = $("#f_email").value;
+    const wa = waLink(tel);
+    $("#contactLine").innerHTML = (wa ? `<a href="${esc(wa)}" target="_blank" rel="noopener">Abrir WhatsApp</a>` : "") +
+      (mail ? `<span>E-mail: <span style="user-select:all">${esc(mail)}</span></span>` : "");
+  }
+
+  function renderHist() {
+    const h = (current?.data?.historico || []).slice().reverse();
+    $("#hist").innerHTML = h.length ? h.map(x => `<div class="hist-item"><time>${esc(new Date(x.t).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }))}</time><p>${esc(x.txt)}</p></div>`).join("")
+      : `<p class="hint">Sem anotações ainda.</p>`;
+  }
+
+  function openDrawer(id) {
+    const isNew = !id;
+    const data = isNew ? { etapa: "novo", servico: "fv", historico: [] } : structuredClone(leads.get(id));
+    current = { id: id || newId(), data, isNew };
+    FIELDS.forEach(f => { const el = $("#f_" + f); if (el) el.value = data[f] ?? ""; });
+    $("#dTitle").textContent = isNew ? "Novo lead" : (data.nome || "Lead");
+    $("#delArea").innerHTML = isNew ? "" : `<button class="btn danger" type="button" id="dDelete">Excluir</button>`;
+    $("#noteText").value = "";
+    renderQual(); renderHist();
+    $("#scrim").hidden = false; $("#drawer").hidden = false;
+    setTimeout(() => $("#f_nome").focus(), 30);
+  }
+  function closeDrawer() {
+    current = null; $("#drawer").hidden = true;
+    if ($("#importModal").hidden && $("#setModal").hidden) $("#scrim").hidden = true;
+  }
+
+  async function saveCurrent(extraNote) {
+    const d = formData();
+    if (!d.nome) { toast("Informe o nome do lead."); $("#f_nome").focus(); return false; }
+    const before = current.isNew ? null : leads.get(current.id);
+    d.historico = [...(current.data.historico || [])];
+    if (current.isNew) d.historico.push({ t: Date.now(), txt: "Lead cadastrado manualmente" });
+    if (before && before.etapa !== d.etapa) d.historico.push({ t: Date.now(), txt: `Etapa: ${ETAPA_LABEL[before.etapa] || "Novo"} → ${ETAPA_LABEL[d.etapa]}` });
+    if (extraNote) d.historico.push({ t: Date.now(), txt: extraNote });
+    d.criado = d.criado || new Date().toISOString();
+    d.atualizado = new Date().toISOString();
+    if (d.historico.length > 200) d.historico = d.historico.slice(-200);
+    try {
+      await writeLead(current.id, d);
+      current.data = d; current.isNew = false;
+      return true;
+    } catch (e) { toast("Não foi possível salvar: " + (e?.message || e?.code || "erro")); return false; }
+  }
+
+  // ---------- Importação CSV ----------
+  const IMPORT_FIELDS = [
+    ["nome", "Nome", ["nome", "full name", "name", "cliente", "contato", "nome completo", "razao social", "lead"]],
+    ["empresa", "Empresa", ["empresa", "company", "razao social", "nome fantasia", "organizacao"]],
+    ["telefone", "Telefone / WhatsApp", ["telefone", "phone number", "whatsapp", "celular", "fone", "phone", "tel", "mobile", "contato telefone"]],
+    ["email", "E-mail", ["email", "e-mail", "mail", "correio"]],
+    ["cidade", "Cidade", ["cidade", "city", "municipio", "localidade", "em qual cidade fica o imovel"]],
+    ["uf", "UF", ["uf", "estado", "state"]],
+    ["tipo", "Tipo de cliente", ["tipo", "segmento", "perfil", "classe", "tipo de cliente", "categoria"]],
+    ["servico", "Serviço de interesse", ["servico", "interesse", "produto", "solucao", "servico de interesse"]],
+    ["consumo", "Consumo (kWh/mês)", ["consumo", "kwh", "consumo medio", "consumo mensal", "media kwh", "consumo kwh"]],
+    ["conta", "Valor da conta (R$ ou faixa)", ["conta", "valor conta", "valor da conta", "valor da conta de energia", "fatura", "gasto", "valor fatura", "conta de luz", "valor"]],
+    ["decisor", "Decisor / autorização", ["decisor", "autorizacao para instalacao", "autorizacao", "imovel proprio", "proprietario"]],
+    ["concessionaria", "Concessionária", ["concessionaria", "distribuidora", "concessionaria de energia"]],
+    ["origem", "Origem / plataforma", ["origem", "platform", "plataforma", "fonte", "source", "canal", "utm source"]],
+    ["campanha", "Campanha", ["campaign name", "campanha", "nome da campanha", "utm campaign"]],
+    ["etapa", "Etapa", ["etapa", "etapa do funil", "status do funil", "fase", "estagio"]],
+    ["followup", "Data de follow-up", ["follow up", "followup", "retorno", "data retorno", "proximo contato"]],
+    ["criado", "Data de entrada", ["created time", "data de criacao", "criado em", "data cadastro", "data de entrada", "data do lead"]],
+    ["obs", "Observações (vira anotação)", ["observacao", "observacoes", "obs", "notas", "nota", "comentario", "comentarios", "mensagem"]]
+  ];
+  const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[_\-\/]+/g, " ").replace(/[^\w ]/g, "").replace(/\s+/g, " ").trim();
+
+  function detectDelimiter(text) {
+    const first = text.split(/\r?\n/).slice(0, 5).join("\n");
+    const cands = [";", ",", "\t", "|"];
+    let best = ",", bestN = -1;
+    for (const c of cands) {
+      let n = 0, q = false;
+      for (const ch of first) { if (ch === '"') q = !q; else if (ch === c && !q) n++; }
+      if (n > bestN) { bestN = n; best = c; }
+    }
+    return best;
+  }
+  function parseCSV(text, delim) {
+    const rows = []; let row = [], field = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+        else field += c;
+      } else if (c === '"' && field === "") q = true;
+      else if (c === delim) { row.push(field); field = ""; }
+      else if (c === "\n" || c === "\r") {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        row.push(field); rows.push(row); row = []; field = "";
+      } else field += c;
+    }
+    if (field !== "" || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.some(v => v.trim() !== ""));
+  }
+  function guessMap(headers) {
+    const map = {}; const used = new Set();
+    const H = headers.map(norm);
+    // 1ª passada: igualdade exata; 2ª: contém
+    for (const pass of [0, 1]) {
+      for (const [key, , aliases] of IMPORT_FIELDS) {
+        if (map[key] != null) continue;
+        const idx = H.findIndex((h, i) => !used.has(i) && aliases.map(norm).some(a => pass === 0 ? h === a : (h.includes(a) && a.length > 2)));
+        if (idx >= 0) { map[key] = idx; used.add(idx); }
+      }
+    }
+    return map;
+  }
+  const mapEnum = (v, arr, extra = {}) => {
+    const n = norm(v); if (!n) return "";
+    for (const [k, words] of Object.entries(extra)) if (words.some(w => n.includes(w))) return k;
+    const hit = arr.find(([k, t]) => norm(t) === n || k === n || norm(t).startsWith(n) || n.startsWith(norm(t).split(" ")[0]));
+    return hit ? hit[0] : "";
+  };
+  const parseDate = v => {
+    const s = String(v || "").trim(); if (!s) return "";
+    let m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+    if (m) { const y = m[3].length === 2 ? "20" + m[3] : m[3]; return `${y}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`; }
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : "";
+  };
+
+  // Faixa de formulário: "de_501_a_800" → 650; "acima_1200" → 1500; "ate_300" → 250
+  function faixa(v) {
+    const s = norm(v);
+    if (!s) return null;
+    const ns = (s.match(/\d+(?:[.,]\d+)*/g) || []).map(num).filter(n => n != null);
+    if (/^(acima|mais|maior)/.test(s) && ns.length) return Math.round(ns[0] * 1.25);
+    if (/^(ate|abaixo|menos|menor)/.test(s) && ns.length) return Math.round(ns[0] * 0.83);
+    if (ns.length >= 2 && /\b(a|ate)\b/.test(s)) return Math.round((ns[0] + ns[1]) / 2);
+    return num(v);
+  }
+  const PLATAFORMAS = { ig: "Instagram (Meta Ads)", instagram: "Instagram (Meta Ads)", fb: "Facebook (Meta Ads)", facebook: "Facebook (Meta Ads)", msg: "Messenger (Meta Ads)", an: "Audience Network (Meta Ads)", wa: "WhatsApp" };
+  const cleanPhone = v => String(v || "").replace(/^\s*[a-z]+:/i, "").trim();
+  function decisorDe(v) {
+    const n = norm(v); if (!n) return { decisor: "", area: "" };
+    if (/autoriz|alug|inquil|socio|conjuge/.test(n) && !/propri/.test(n)) return { decisor: "influencia", area: "" };
+    if (/propri|dono|sim|decid/.test(n)) return { decisor: "sim", area: /imovel|propri/.test(n) ? "avaliar" : "" };
+    if (/nao/.test(n)) return { decisor: "nao", area: "" };
+    return { decisor: "", area: "" };
+  }
+
+  const MINUSC = new Set(["de", "da", "do", "das", "dos", "e"]);
+  const titulo = v => (v === v.toLowerCase() || v === v.toUpperCase()) ? v.toLowerCase().split(/\s+/).map((w, i) => i && MINUSC.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : v;
+  let imp = null; // { headers, rows, map, fileName }
+
+  function openImport() {
+    imp = null; $("#scrim").hidden = false; $("#importModal").hidden = false; renderImportStep1();
+  }
+  function closeImport() {
+    $("#importModal").hidden = true; if ($("#drawer").hidden && $("#setModal").hidden) $("#scrim").hidden = true;
+  }
+
+  function renderImportStep1() {
+    $("#iBody").innerHTML = `
+      <label class="dropzone" id="dz" for="csvFile">
+        <strong>Arraste a planilha aqui ou clique para escolher</strong>
+        <p>Aceita Excel (.xlsx) e CSV com ponto e vírgula, vírgula ou tabulação. Funciona direto com a exportação de leads do Meta Ads.</p>
+        <input type="file" id="csvFile" accept=".csv,.txt,.xlsx,.xls,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" hidden>
+      </label>
+      <p class="hint">As colunas são reconhecidas pelo nome do cabeçalho (nome, telefone, e-mail, cidade, consumo kWh, valor da conta, concessionária…). Você confere o mapeamento antes de importar.</p>`;
+    $("#iFoot").innerHTML = `<button class="btn" type="button" data-act="model">Baixar modelo de CSV</button><button class="btn" type="button" data-close>Cancelar</button>`;
+    const dz = $("#dz");
+    $("#csvFile").addEventListener("change", e => e.target.files[0] && readFile(e.target.files[0]));
+    dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
+    dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+    dz.addEventListener("drop", e => { e.preventDefault(); dz.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) readFile(f); });
+  }
+
+  function readText(file, enc) {
+    return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsText(file, enc); });
+  }
+  async function readFile(file) {
+    try {
+      let rows, delim = null, sheet = null;
+      if (/\.(xlsx|xlsm|xls|ods)$/i.test(file.name)) {
+        if (!window.XLSX) { toast("O leitor de Excel não carregou. Salve a planilha como CSV e importe de novo."); return; }
+        const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+        sheet = wb.SheetNames.find(n => XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1 }).length > 1) || wb.SheetNames[0];
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { header: 1, raw: false, defval: "", dateNF: "yyyy-mm-dd hh:mm" })
+          .map(r => Array.from(r, v => String(v ?? ""))).filter(r => r.some(v => v.trim() !== ""));
+      } else {
+        let text = await readText(file, "utf-8");
+        if (text.includes("�")) text = await readText(file, "windows-1252");
+        text = text.replace(/^﻿/, "");
+        delim = detectDelimiter(text);
+        rows = parseCSV(text, delim);
+      }
+      if (rows.length < 2) { toast("O arquivo não tem linhas de dados abaixo do cabeçalho."); return; }
+      const headers = rows[0].map(h => h.trim());
+      imp = { headers, rows: rows.slice(1), map: guessMap(headers), fileName: file.name, delim, sheet, defTipo: "", defServico: "fv" };
+      if (imp.map.nome == null && imp.map.empresa != null) { imp.map.nome = imp.map.empresa; }
+      renderImportStep2();
+    } catch (e) { toast("Não consegui ler o arquivo. Verifique se é um CSV válido."); }
+  }
+
+  function rowToLead(r) {
+    const g = k => imp.map[k] != null ? String(r[imp.map[k]] ?? "").trim() : "";
+    const l = {
+      nome: g("nome") || g("empresa"),
+      empresa: g("empresa") && g("empresa") !== g("nome") ? g("empresa") : "",
+      telefone: cleanPhone(g("telefone")), email: g("email").toLowerCase(), cidade: titulo(g("cidade")), uf: g("uf").slice(0, 2).toUpperCase(),
+      tipo: mapEnum(g("tipo"), TIPOS, { industrial: ["indust", "fabrica"], comercial: ["comerc", "loja", "empresa"], rural: ["rural", "agro", "fazenda", "sitio"], residencial: ["resid", "casa", "b1"], publico: ["public", "prefeit"] }),
+      servico: mapEnum(g("servico"), SERVICOS, { fv: ["solar", "fotovolt", "fv", "usina", "placa", "painel"], termografia: ["termo"], spda: ["spda", "para raio", "pararaio", "aterramento"], icms: ["icms", "credito"], projeto: ["projeto", "subestac", "instalac"] }) || (g("servico") ? "outro" : "fv"),
+      consumo: faixa(g("consumo")), conta: faixa(g("conta")),
+      concessionaria: g("concessionaria"),
+      origem: [PLATAFORMAS[norm(g("origem"))] || g("origem"), g("campanha")].filter(Boolean).join(" · ") || "Importação de planilha",
+      etapa: mapEnum(g("etapa"), ETAPAS, { ganho: ["ganho", "fechado", "vendido"], perdido: ["perdido", "perdeu"], proposta: ["proposta"], visita: ["visita"], contato: ["contato", "contatado"], qualificado: ["qualific"], negociacao: ["negocia"] }) || "novo",
+      followup: parseDate(g("followup")),
+      ...decisorDe(g("decisor")), prazo: "", pagamento: "", proxima: "", motivo: ""
+    };
+    if (!l.tipo && imp.defTipo) l.tipo = imp.defTipo;
+    if (!g("servico") && imp.defServico) l.servico = imp.defServico;
+    const dt = g("criado"); const pd = dt ? new Date(dt) : null;
+    if (pd && !isNaN(pd)) l.criado = pd.toISOString();
+    else if (parseDate(dt)) l.criado = parseDate(dt) + "T12:00:00.000Z";
+    const faixaTxt = g("conta"); if (faixaTxt && !/^[\d.,\sR$]+$/.test(faixaTxt)) l.contaFaixa = faixaTxt.replace(/_/g, " ");
+    const now = Date.now();
+    l.historico = [{ t: now, txt: `Importado de ${imp.fileName}` + (l.contaFaixa ? ` · conta informada: ${l.contaFaixa}` : "") }];
+    const obs = g("obs"); if (obs) l.historico.push({ t: now + 1, txt: obs });
+    return l;
+  }
+  const keyOf = l => {
+    const tel = String(l.telefone || "").replace(/\D/g, "").slice(-9);
+    return { tel: tel.length >= 8 ? tel : "", mail: (l.email || "").toLowerCase() };
+  };
+
+  function analyzeImport() {
+    const existing = new Map();
+    for (const [id, l] of leads) { const k = keyOf(l); if (k.tel) existing.set("t" + k.tel, id); if (k.mail) existing.set("m" + k.mail, id); }
+    const seen = new Set();
+    let novos = 0, dup = 0, semNome = 0;
+    const items = imp.rows.map(r => {
+      const l = rowToLead(r);
+      if (!l.nome) { semNome++; return { l, skip: true }; }
+      const k = keyOf(l);
+      const dupId = (k.tel && existing.get("t" + k.tel)) || (k.mail && existing.get("m" + k.mail));
+      const inFile = (k.tel && seen.has("t" + k.tel)) || (k.mail && seen.has("m" + k.mail));
+      if (k.tel) seen.add("t" + k.tel); if (k.mail) seen.add("m" + k.mail);
+      if (dupId || inFile) { dup++; return { l, dupId, inFile }; }
+      novos++; return { l };
+    });
+    return { items, novos, dup, semNome };
+  }
+
+  function renderImportStep2() {
+    const prevDup = document.querySelector('input[name="dupMode"]:checked')?.value || "skip";
+    const opts = `<option value="">— ignorar —</option>` + imp.headers.map((h, i) => `<option value="${i}">${esc(h || "Coluna " + (i + 1))}</option>`).join("");
+    const a = analyzeImport();
+    const prev = a.items.slice(0, 6);
+    $("#iBody").innerHTML = `
+      <p class="hint"><b>${esc(imp.fileName)}</b> · ${fmt(imp.rows.length)} linhas · ${imp.sheet ? "aba “" + esc(imp.sheet) + "”" : "separador “" + (imp.delim === "\t" ? "tab" : esc(imp.delim)) + "”"}. Confira qual coluna do arquivo alimenta cada campo do CRM. Faixas de valor como “de 501 a 800” viram o ponto médio (R$ 650).</p>
+      <div class="map-grid">${IMPORT_FIELDS.map(([k, t]) => `<label class="f">${t}<select data-map="${k}" id="map_${k}">${opts}</select></label>`).join("")}</div>
+      <div class="grid2">
+        <label class="f">Tipo de cliente quando a planilha não informa<select id="defTipo"><option value="">Deixar em branco</option>${TIPOS.map(([k, t]) => `<option value="${k}">${t}</option>`).join("")}</select></label>
+        <label class="f">Serviço quando a planilha não informa<select id="defServico">${SERVICOS.map(([k, t]) => `<option value="${k}">${t}</option>`).join("")}</select></label>
+      </div>
+      <div class="opts" role="radiogroup" aria-label="Duplicados">
+        <span><b>Leads repetidos</b> (mesmo telefone ou e-mail):</span>
+        <label><input type="radio" name="dupMode" value="skip" checked> ignorar</label>
+        <label><input type="radio" name="dupMode" value="update"> atualizar o existente</label>
+        <label><input type="radio" name="dupMode" value="add"> importar mesmo assim</label>
+      </div>
+      <div class="preview"><table><thead><tr><th>Nome</th><th>Telefone</th><th>Cidade</th><th>Tipo</th><th>Serviço</th><th class="r">kWh</th><th class="r">Conta</th><th class="r">Pontos</th></tr></thead>
+      <tbody>${prev.map(({ l, dupId, inFile, skip }) => `<tr>
+        <td>${esc(l.nome || "—")}${skip ? ' <span class="chip late">sem nome</span>' : dupId || inFile ? ' <span class="chip">repetido</span>' : ""}</td>
+        <td>${esc(l.telefone)}</td><td>${esc(l.cidade)}</td><td>${esc(lab(TIPOS, l.tipo))}</td><td>${esc(lab(SERVICOS, l.servico))}</td>
+        <td class="r num">${fmt(l.consumo)}</td><td class="r num">${l.conta ? brl(l.conta) : "—"}</td><td class="r"><span class="score num t-${temp(score(l).total)}">${score(l).total}</span></td></tr>`).join("")}</tbody></table></div>
+      <div class="progress" id="impProg" hidden><i></i></div>`;
+    IMPORT_FIELDS.forEach(([k]) => { $("#map_" + k).value = imp.map[k] ?? ""; });
+    const dm = document.querySelector(`input[name="dupMode"][value="${prevDup}"]`); if (dm) dm.checked = true;
+    $("#defTipo").value = imp.defTipo; $("#defServico").value = imp.defServico;
+    $("#defTipo").addEventListener("change", e => { imp.defTipo = e.target.value; renderImportStep2(); });
+    $("#defServico").addEventListener("change", e => { imp.defServico = e.target.value; renderImportStep2(); });
+    $("#iBody").querySelectorAll("[data-map]").forEach(s => s.addEventListener("change", () => {
+      const v = s.value; imp.map[s.dataset.map] = v === "" ? null : +v; renderImportStep2();
+    }));
+    $("#iFoot").innerHTML = `<span class="info num">${fmt(a.novos)} novos · ${fmt(a.dup)} repetidos${a.semNome ? ` · ${fmt(a.semNome)} sem nome (ignorados)` : ""}</span>
+      <button class="btn" type="button" id="impBack">Outro arquivo</button>
+      <button class="btn primary" type="button" id="impGo" ${imp.map.nome == null ? "disabled" : ""}>Importar leads</button>`;
+    $("#impBack").addEventListener("click", renderImportStep1);
+    $("#impGo").addEventListener("click", runImport);
+  }
+
+  async function runImport() {
+    const dupMode = document.querySelector('input[name="dupMode"]:checked').value;
+    const a = analyzeImport();
+    const jobs = [];
+    for (const it of a.items) {
+      if (it.skip) continue;
+      if (it.dupId && dupMode === "skip") continue;
+      if (it.inFile && !it.dupId && dupMode === "skip") continue;
+      if (it.dupId && dupMode === "update") {
+        const old = leads.get(it.dupId);
+        const merged = { ...old };
+        for (const [k, v] of Object.entries(it.l)) if (k !== "historico" && v !== "" && v != null && !(k === "etapa" && v === "novo") && !(k === "origem" && v === "Importação de planilha") && k !== "criado") merged[k] = v;
+        merged.historico = [...(old.historico || []), { t: Date.now(), txt: `Atualizado pela importação de ${imp.fileName}` }].slice(-200);
+        merged.atualizado = new Date().toISOString();
+        jobs.push([it.dupId, merged]);
+      } else {
+        const l = { ...it.l, criado: it.l.criado || new Date().toISOString(), atualizado: new Date().toISOString() };
+        jobs.push([newId(), l]);
+      }
+    }
+    if (!jobs.length) { toast("Nada novo para importar."); return; }
+    $("#impGo").disabled = true; $("#impBack").disabled = true;
+    const prog = $("#impProg"); prog.hidden = false;
+    let done = 0, fail = 0, lastErr = null;
+    if (mode === "local") {
+      jobs.forEach(([id, l]) => leads.set(id, l));
+      if (!lsSet(LS_KEY, Object.fromEntries(leads))) { fail = jobs.length; lastErr = { message: "o navegador não permitiu salvar" }; jobs.forEach(([id]) => leads.delete(id)); }
+      else done = jobs.length;
+      render();
+    } else {
+      const queue = jobs.slice();
+      const worker = async () => {
+        while (queue.length) {
+          const [id, l] = queue.shift();
+          try { await writeLead(id, l); done++; }
+          catch (e) { fail++; lastErr = e; if (e?.code === "quota_exceeded") queue.length = 0; }
+          prog.firstElementChild.style.width = Math.round(100 * (done + fail) / jobs.length) + "%";
+        }
+      };
+      await Promise.all([worker(), worker(), worker()]);
+    }
+    closeImport();
+    toast(fail ? `${done} leads importados, ${fail} falharam${lastErr?.code === "quota_exceeded" ? " (limite de armazenamento atingido)" : ""}.` : `${done} leads importados.`);
+  }
+
+  // ---------- Exportação ----------
+  const csvCell = v => { const s = String(v ?? ""); return /[;"\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  async function saveFile(filename, text) {
+    const data = "\uFEFF" + text;
+    if (dl) {
+      try { await dl.save({ filename, data }); return; }
+      catch (e) { if (e?.code === "declined") return; toast("Não foi possível baixar o arquivo (" + (e?.code || "erro") + ")."); return; }
+    }
+    if (window.claude) { toast("O download não está disponível nesta visualização."); return; }
+    const url = URL.createObjectURL(new Blob([data], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  function exportCSV() {
+    const list = filtered();
+    if (!list.length) { toast("Não há leads para exportar."); return; }
+    const head = ["Nome", "Empresa", "Telefone", "E-mail", "Cidade", "UF", "Tipo", "Serviço", "Consumo kWh/mês", "Valor conta R$", "Concessionária", "Origem", "Faixa da conta", "Decisor", "Prazo", "Pagamento", "Área", "Pontuação", "Temperatura", "kWp estimado", "Investimento estimado R$", "Etapa", "Próxima ação", "Follow-up", "Motivo da perda", "Última anotação"];
+    const lines = [head.join(";")];
+    list.forEach(({ l, s }) => {
+      const e = estimativa(l); const h = l.historico || [];
+      lines.push([l.nome, l.empresa, l.telefone, l.email, l.cidade, l.uf, lab(TIPOS, l.tipo), lab(SERVICOS, l.servico),
+        l.consumo != null ? fmt(l.consumo) : "", l.conta != null ? fmt(l.conta, 2) : "", l.concessionaria, l.origem, l.contaFaixa || "",
+        lab(DECISOR, l.decisor), lab(PRAZO, l.prazo), lab(PAGAMENTO, l.pagamento), lab(AREA, l.area), s, TEMP_LABEL[temp(s)],
+        e ? fmt(e.kwp, 2) : "", e ? fmt(e.invest, 0) : "", ETAPA_LABEL[l.etapa] || "Novo", l.proxima, fmtDate(l.followup), l.motivo,
+        h.length ? h[h.length - 1].txt : ""].map(csvCell).join(";"));
+    });
+    saveFile(`leads-amper-${todayISO()}.csv`, lines.join("\r\n"));
+  }
+  function downloadModel() {
+    const txt = [
+      "Nome;Empresa;Telefone;E-mail;Cidade;UF;Tipo;Serviço;Consumo kWh;Valor conta;Concessionária;Origem;Observações",
+      "Maria Souza;;(12) 99876-5432;maria@exemplo.com;Taubaté;SP;Residencial;Usina fotovoltaica;620;590,00;EDP SP;Instagram;Quer orçamento até o fim do mês",
+      "Metalúrgica Exemplo Ltda;Metalúrgica Exemplo;(12) 3456-7890;compras@exemplo.com.br;São José dos Campos;SP;Industrial;Crédito de ICMS;18.500;;EDP SP;Indicação;Grupo A, verificar faturas dos últimos 60 meses"
+    ].join("\r\n");
+    saveFile("modelo-leads-amper.csv", txt);
+  }
+
+  // ---------- Parâmetros ----------
+  function openSettings() {
+    $("#s_hsp").value = fmt(cfg.hsp, 2); $("#s_pr").value = fmt(cfg.pr, 2); $("#s_preco").value = fmt(cfg.preco, 0);
+    $("#s_tarifa").value = fmt(cfg.tarifa, 2); $("#s_modulo").value = fmt(cfg.modulo, 0);
+    $("#scrim").hidden = false; $("#setModal").hidden = false;
+  }
+  function closeSettings() { $("#setModal").hidden = true; if ($("#drawer").hidden && $("#importModal").hidden) $("#scrim").hidden = true; }
+
+  // ---------- Eventos ----------
+  fillSelect($("#fSvc"), SERVICOS, "Todos os serviços");
+  fillSelect($("#fTipo"), TIPOS, "Todos os tipos");
+  fillSelect($("#f_tipo"), TIPOS, "Não informado");
+  fillSelect($("#f_servico"), SERVICOS);
+  fillSelect($("#f_decisor"), DECISOR); fillSelect($("#f_prazo"), PRAZO); fillSelect($("#f_pagamento"), PAGAMENTO); fillSelect($("#f_area"), AREA);
+  fillSelect($("#f_etapa"), ETAPAS);
+
+  ["#q", "#fTemp", "#fSvc", "#fTipo"].forEach(s => $(s).addEventListener("input", render));
+  $("#vBoard").addEventListener("click", () => { view = "board"; try { localStorage.setItem("amper-crm-view", view); } catch {} render(); });
+  $("#vList").addEventListener("click", () => { view = "list"; try { localStorage.setItem("amper-crm-view", view); } catch {} render(); });
+  $("#btnImport").addEventListener("click", openImport);
+  $("#btnNew").addEventListener("click", () => openDrawer(null));
+  $("#btnExport").addEventListener("click", exportCSV);
+  $("#btnSettings").addEventListener("click", openSettings);
+
+  document.addEventListener("click", e => {
+    const act = e.target.closest("[data-act]")?.dataset.act;
+    if (act === "import") openImport();
+    else if (act === "new") openDrawer(null);
+    else if (act === "model") downloadModel();
+    if (e.target.closest("[data-close]")) { e.target.closest("#importModal") ? closeImport() : closeSettings(); }
+  });
+
+  $("#view").addEventListener("click", e => {
+    const th = e.target.closest("th[data-sort]");
+    if (th) { const k = th.dataset.sort; if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = ["score", "kwh", "kwp"].includes(k) ? -1 : 1; } render(); return; }
+    const el = e.target.closest("[data-id]");
+    if (el) openDrawer(el.dataset.id);
+  });
+
+  // Arrastar entre etapas
+  let dragId = null;
+  $("#view").addEventListener("dragstart", e => { const c = e.target.closest(".card"); if (!c) return; dragId = c.dataset.id; e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", dragId); });
+  $("#view").addEventListener("dragover", e => { const col = e.target.closest(".col"); if (!col || !dragId) return; e.preventDefault(); document.querySelectorAll(".col.drop").forEach(c => c !== col && c.classList.remove("drop")); col.classList.add("drop"); });
+  $("#view").addEventListener("dragleave", e => { const col = e.target.closest(".col"); if (col && !col.contains(e.relatedTarget)) col.classList.remove("drop"); });
+  $("#view").addEventListener("drop", async e => {
+    const col = e.target.closest(".col"); if (!col || !dragId) return; e.preventDefault(); col.classList.remove("drop");
+    const id = dragId; dragId = null;
+    const l = leads.get(id); const to = col.dataset.stage;
+    if (!l || l.etapa === to) return;
+    const d = structuredClone(l);
+    d.historico = [...(d.historico || []), { t: Date.now(), txt: `Etapa: ${ETAPA_LABEL[l.etapa] || "Novo"} → ${ETAPA_LABEL[to]}` }].slice(-200);
+    d.etapa = to; d.atualizado = new Date().toISOString();
+    try { await writeLead(id, d); toast(`${l.nome} movido para ${ETAPA_LABEL[to]}.`); if (to === "perdido") openDrawer(id); }
+    catch (err) { toast("Não foi possível mover: " + (err?.message || err?.code)); }
+  });
+  $("#view").addEventListener("dragend", () => { dragId = null; document.querySelectorAll(".col.drop").forEach(c => c.classList.remove("drop")); });
+
+  $("#leadForm").addEventListener("input", renderQual);
+  $("#leadForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const btn = $("#dSave"); btn.disabled = true;
+    const ok = await saveCurrent(); btn.disabled = false;
+    if (ok) { toast("Lead salvo."); closeDrawer(); }
+  });
+  $("#noteAdd").addEventListener("click", async () => {
+    const txt = $("#noteText").value.trim(); if (!txt) return;
+    const ok = await saveCurrent(txt);
+    if (ok) { $("#noteText").value = ""; renderHist(); $("#dTitle").textContent = current.data.nome; $("#delArea").innerHTML = `<button class="btn danger" type="button" id="dDelete">Excluir</button>`; toast("Anotação registrada."); }
+  });
+  $("#noteText").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("#noteAdd").click(); } });
+  $("#delArea").addEventListener("click", async e => {
+    if (e.target.id === "dDelete") {
+      $("#delArea").innerHTML = `<div class="confirm">Excluir este lead? <button class="btn danger" type="button" id="dDelYes">Excluir</button><button class="btn" type="button" id="dDelNo">Manter</button></div>`;
+    } else if (e.target.id === "dDelNo") {
+      $("#delArea").innerHTML = `<button class="btn danger" type="button" id="dDelete">Excluir</button>`;
+    } else if (e.target.id === "dDelYes") {
+      const nome = current.data.nome; const id = current.id;
+      try { await deleteLead(id); closeDrawer(); toast(`${nome || "Lead"} excluído.`); } catch (err) { toast("Não foi possível excluir."); }
+    }
+  });
+  $("#dClose").addEventListener("click", closeDrawer);
+  $("#dCancel").addEventListener("click", closeDrawer);
+  $("#scrim").addEventListener("click", () => { closeDrawer(); closeImport(); closeSettings(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#importModal").hidden) closeImport(); else if (!$("#setModal").hidden) closeSettings(); else if (!$("#drawer").hidden) closeDrawer(); } });
+
+  $("#setForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const c = { hsp: num($("#s_hsp").value), pr: num($("#s_pr").value), preco: num($("#s_preco").value), tarifa: num($("#s_tarifa").value), modulo: num($("#s_modulo").value) };
+    for (const k in c) if (!c[k] || c[k] <= 0) { toast("Preencha todos os parâmetros com valores maiores que zero."); return; }
+    if (c.pr > 1) c.pr = c.pr / 100;
+    try { await saveCfg(c); closeSettings(); toast("Parâmetros salvos."); } catch { toast("Não foi possível salvar os parâmetros."); }
+  });
+
+  render();
+  initStore();
+})();
+</script>
