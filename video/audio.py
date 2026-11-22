@@ -1,5 +1,5 @@
 import numpy as np, wave
-SR=44100; T=22.0; n=int(SR*T); t=np.arange(n)/SR
+SR=44100; T=19.0; n=int(SR*T); t=np.arange(n)/SR
 L=np.zeros(n); R=np.zeros(n)
 rng=np.random.default_rng(3)
 def add(sig,start,pan=0.0,gain=1.0):
@@ -41,7 +41,7 @@ for i,fr in enumerate((392,523.3,659.3,784)): add(tone(fr,2.2,.01,.9)*.22,5.3+i*
 bpm=105; beat=60/bpm; chords=[(130.8,164.8,196),(98,123.5,146.8),(110,130.8,164.8),(87.3,110,130.8)]
 arp=[[261.6,329.6,392,523.3],[196,246.9,293.7,392],[220,261.6,329.6,440],[174.6,220,261.6,349.2]]
 start=9.0; bar=beat*4; ci=0; tt=start
-while tt<19.2:
+while tt<15.4:
     ch=chords[ci%4]; d=bar+.3
     x=np.arange(int(d*SR))/SR
     pad=sum(np.sin(2*np.pi*f*x)+.4*np.sin(2*np.pi*f*2*x) for f in ch)*np.minimum(x/.4,1)*np.exp(-np.maximum(x-bar,0)*8)
@@ -54,11 +54,10 @@ while tt<19.2:
     tt+=bar; ci+=1
 # electric whoosh when energy starts flowing (9.7) and sun shimmer (16)
 w=lp(rng.standard_normal(int(1.2*SR)),6)*np.interp(np.arange(int(1.2*SR))/SR,[0,.6,1.2],[0,.4,0]); add(w,9.4,0,1)
-for i,fr in enumerate((1046.5,1318.5,1568,2093)): add(tone(fr,1.6,.01,.6,(1,.2))*.08,16.1+i*.12,0.6*(-1)**i,1)
-# 6) end card: resolved chord + sparkle at 19.4
-for f in (261.6,329.6,392,523.3): add(tone(f,2.8,.02,1.3,(1,.35,.12))*.2,19.4,0,1)
-add(tone(130.8,2.8,.02,1.4,(1,.4))*.25,19.4,0,1)
-for i,fr in enumerate((1568,2093,2637)): add(tone(fr,1.2,.005,.4,(1,.1))*.07,19.9+i*.15,(-.6 if i%2 else .6),1)
+# 6) end card
+for f in (261.6,329.6,392,523.3): add(tone(f,2.8,.02,1.3,(1,.35,.12))*.2,15.6,0,1)
+add(tone(130.8,2.8,.02,1.4,(1,.4))*.25,15.6,0,1)
+for i,fr in enumerate((1568,2093,2637)): add(tone(fr,1.2,.005,.4,(1,.1))*.07,16.1+i*.15,(-.6 if i%2 else .6),1)
 # master: fade in/out, normalize
 m=np.interp(t,[0,.5,T-1.5,T],[0,1,1,0]); L*=m; R*=m
 pk=max(abs(L).max(),abs(R).max()); L=L/pk*.85; R=R/pk*.85

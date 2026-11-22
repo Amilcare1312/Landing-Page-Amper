@@ -106,14 +106,12 @@ window.draw=function(t){
   txt(t,'APAGÃO.',3,5,200,84,'#F7A21B');
   txt(t,'Mas um apartamento\ncontinua aceso.',5.2,8.6,200,50);
  }
+ if(t>=15.6){endcard(t-15.6)}
  if(t>=8.7&&t<16.2){const a=seg(t,8.7,9.4);g.globalAlpha=a;if(t>=15.6)g.globalAlpha=1-seg(t,15.6,16.2);
   room(t-8.7);g.globalAlpha=1;
   txt(t,'O segredo?',9.5,11,90,56);
   txt(t,'Sistema híbrido\ncom baterias.',11,16,90,54,'#F7A21B');
   txt(t,'A energia fica guardada\npara quando a rede falhar.',12.8,15.8,1215,34,'#fff');}
- if(t>=15.8&&t<19.6){const a=seg(t,15.8,16.4);g.globalAlpha=a;if(t>=19)g.globalAlpha=1-seg(t,19,19.6);day(t-15.8);g.globalAlpha=1;
-  txt(t,'De dia, o sol\ncarrega as baterias.',16.4,19.2,110,54,'#0A3B30');}
- if(t>=19.4){endcard(t-19.4)}
 }
 window.ready=()=>logo.complete;
 draw(0);
