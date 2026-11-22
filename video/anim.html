@@ -1,0 +1,120 @@
+<!doctype html><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<canvas id="c" width="720" height="1280"></canvas>
+<script>
+const W=720,H=1280,cv=document.getElementById('c'),g=cv.getContext('2d');
+const logo=new Image();logo.src='logo.png';
+let s=7;const rnd=()=>{s=(s*16807)%2147483647;return s/2147483647};
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+const seg=(t,a,b)=>clamp((t-a)/(b-a));
+// buildings
+const B=[];let x=-20;const base=1010;
+while(x<W+20){const w=70+rnd()*60|0,h=260+rnd()*480|0;B.push({x,w,h,col:[22+rnd()*14|0,30+rnd()*16|0,48+rnd()*20|0]});x+=w+4}
+const hero=B[Math.floor(B.length/2)];hero.h=760;hero.w=120;
+// rebuild x to keep contiguous
+x=-20;B.forEach(b=>{b.x=x;x+=b.w+4});
+const HERO_COL=3,HERO_ROW=7;
+B.forEach(b=>{b.win=[];const cols=Math.floor((b.w-14)/22),rows=Math.floor((b.h-20)/30);
+ for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)b.win.push({c,r,x:b.x+10+c*22,y:base-b.h+14+r*30,on:rnd()>.25,off:2.0+rnd()*1.8+Math.abs(b.x+b.w/2-W/2)/W*1.2})});
+const heroWin=hero.win.find(w=>w.c==Math.min(HERO_COL,Math.floor((hero.w-14)/22)-1)&&w.r==HERO_ROW);heroWin.on=true;heroWin.hero=true;
+const stars=[...Array(70)].map(()=>({x:rnd()*W,y:rnd()*600,r:rnd()*1.4+.3,p:rnd()*6}));
+function txt(t,str,a,b,y,size,col='#fff',sub){const k=Math.min(seg(t,a,a+.5),1-seg(t,b-.5,b));if(k<=0)return;
+ g.save();g.globalAlpha=k;g.fillStyle='rgba(0,0,0,.45)';g.font=`800 ${size}px Figtree,Arial,sans-serif`;g.textAlign='center';
+ const lines=str.split('\n');lines.forEach((l,i)=>{const yy=y+i*size*1.2+(1-k)*14;g.fillStyle='rgba(0,0,0,.55)';g.fillText(l,W/2+2,yy+3);g.fillStyle=col;g.fillText(l,W/2,yy)});g.restore()}
+function sky(night,t){const gr=g.createLinearGradient(0,0,0,H);if(night){gr.addColorStop(0,'#05080f');gr.addColorStop(1,'#14223a')}else{gr.addColorStop(0,'#7fc4ee');gr.addColorStop(1,'#fef1d9')}g.fillStyle=gr;g.fillRect(0,0,W,H)}
+function city(t){
+ sky(true,t);stars.forEach(s=>{g.globalAlpha=.4+.4*Math.sin(t*2+s.p);g.fillStyle='#fff';g.beginPath();g.arc(s.x,s.y,s.r,0,7);g.fill()});g.globalAlpha=1;
+ g.fillStyle='#e8eef7';g.beginPath();g.arc(650,80,26,0,7);g.fill();g.fillStyle='#05080f';g.beginPath();g.arc(660,74,23,0,7);g.fill();
+ const dark=seg(t,2.0,4.0);
+ // city glow
+ const glow=1-dark;if(glow>0){const gr=g.createLinearGradient(0,base-500,0,base);gr.addColorStop(0,'rgba(247,162,27,0)');gr.addColorStop(1,`rgba(247,162,27,${.35*glow})`);g.fillStyle=gr;g.fillRect(0,base-500,W,500)}
+ B.forEach(b=>{g.fillStyle=`rgb(${b.col})`;g.fillRect(b.x,base-b.h,b.w,b.h);
+  b.win.forEach(w=>{const lit=w.on&&(t<w.off||w.hero);
+   // flicker just before off
+   const fl=w.on&&!w.hero&&t>w.off-.25&&t<w.off?(Math.sin(t*80)>0):true;
+   g.fillStyle=(lit&&fl)?'#ffd27a':'#0c1424';g.fillRect(w.x,w.y,12,18);
+   if(w.hero&&t>3.8){const p=.6+.4*Math.sin(t*3);const r=60+20*p;const gr=g.createRadialGradient(w.x+6,w.y+9,2,w.x+6,w.y+9,r);gr.addColorStop(0,`rgba(255,210,122,${.7*seg(t,3.8,5)})`);gr.addColorStop(1,'rgba(255,210,122,0)');g.fillStyle=gr;g.fillRect(w.x-r,w.y-r,r*2+12,r*2+18);g.fillStyle='#fff3c8';g.fillRect(w.x,w.y,12,18)}})});
+ g.fillStyle='#070b14';g.fillRect(0,base,W,H-base);
+ // street lamps
+ for(let i=0;i<8;i++){const lx=40+i*95;g.fillStyle='#10192b';g.fillRect(lx,base+20,4,60);g.fillStyle=t<2.5+i*.15?'#ffd27a':'#1a2438';g.fillRect(lx-6,base+16,16,6)}
+}
+function room(t){ // cutaway apartment + battery closet
+ sky(true,t);const k=seg(t,0,.8);
+ // building facade
+ g.fillStyle='#16233a';g.fillRect(40,120,640,1040);
+ // apartment
+ const ax=70,ay=170,aw=580,ah=470;g.fillStyle='#f3e6c8';g.fillRect(ax,ay,aw,ah);
+ const lit=1;const gr=g.createRadialGradient(ax+300,ay+60,10,ax+300,ay+60,420);gr.addColorStop(0,'rgba(255,230,160,.55)');gr.addColorStop(1,'rgba(255,230,160,0)');g.fillStyle=gr;g.fillRect(ax,ay,aw,ah);
+ g.fillStyle='#9b7a52';g.fillRect(ax,ay+ah-60,aw,60);
+ // window with dark city
+ g.fillStyle='#0b1220';g.fillRect(ax+40,ay+50,150,170);g.strokeStyle='#cbb88f';g.lineWidth=6;g.strokeRect(ax+40,ay+50,150,170);
+ for(let i=0;i<6;i++){g.fillStyle='#16233a';g.fillRect(ax+48+i*24,ay+130+(i%3)*20,18,90-(i%3)*20)}
+ // lamp
+ g.strokeStyle='#555';g.lineWidth=4;g.beginPath();g.moveTo(ax+300,ay);g.lineTo(ax+300,ay+40);g.stroke();g.fillStyle='#fff3c8';g.beginPath();g.arc(ax+300,ay+55,22,0,7);g.fill();
+ // sofa
+ g.fillStyle='#05705A';g.fillRect(ax+60,ay+ah-150,200,90);g.fillRect(ax+50,ay+ah-170,220,40);
+ // TV
+ g.fillStyle='#111';g.fillRect(ax+340,ay+190,170,100);const tv=.7+.3*Math.sin(t*4);g.fillStyle=`rgb(${80+tv*60|0},${140+tv*50|0},${220})`;g.fillRect(ax+346,ay+196,158,88);
+ // fridge
+ g.fillStyle='#dfe8e4';g.fillRect(ax+525,ay+150,45,260);g.fillStyle='#9fb0aa';g.fillRect(ax+560,ay+200,4,40);
+ // closet
+ const cx=70,cy=670,cw=580,ch=440;g.fillStyle='#0f1b2e';g.fillRect(cx,cy,cw,ch);g.strokeStyle='#05705A';g.lineWidth=3;g.strokeRect(cx,cy,cw,ch);
+ // grid (dead)
+ g.fillStyle='#2a3447';g.fillRect(cx+30,cy+60,90,110);g.fillStyle='#8b94a6';g.font='700 18px Figtree,Arial';g.textAlign='center';g.fillText('REDE',cx+75,cy+50);
+ g.strokeStyle='#7A2E1C';g.lineWidth=5;g.setLineDash([8,8]);g.beginPath();g.moveTo(cx+120,cy+115);g.lineTo(cx+200,cy+115);g.stroke();g.setLineDash([]);
+ g.fillStyle='#e04b3a';g.font='800 40px Arial';g.fillText('✕',cx+160,cy+105);
+ // inverter
+ g.fillStyle='#05705A';g.fillRect(cx+200,cy+60,110,110);g.fillStyle='#fff';g.font='800 16px Figtree,Arial';g.fillText('INVERSOR',cx+255,cy+50);g.fillText('HÍBRIDO',cx+255,cy+122);
+ g.fillStyle='#F7A21B';g.beginPath();g.arc(cx+255,cy+90,10,0,7);g.fill();
+ // batteries
+ const lvl=1-seg(t,2,6)*.25;
+ for(let i=0;i<3;i++){const bx=cx+380+i*62;g.fillStyle='#1d2a40';g.fillRect(bx,cy+40,50,150);g.fillStyle='#05705A';const hh=140*lvl;g.fillRect(bx+4,cy+186-hh,42,hh);g.fillStyle='#F7A21B';g.fillRect(bx+15,cy+34,20,8)}
+ g.fillStyle='#fff';g.fillText('BATERIAS',cx+470,cy+30);
+ // flow: battery -> inverter -> apartment
+ g.strokeStyle='#F7A21B';g.lineWidth=5;g.beginPath();g.moveTo(cx+380,cy+115);g.lineTo(cx+310,cy+115);g.stroke();
+ g.beginPath();g.moveTo(cx+255,cy+60);g.lineTo(cx+255,cy+20);g.lineTo(ax+300,cy+20);g.lineTo(ax+300,ay+ah-5);g.stroke();
+ g.fillStyle='#fff3c8';for(let i=0;i<10;i++){const p=((t*.6+i/10)%1);let px,py;
+  if(p<.25){px=cx+380-70*(p/.25);py=cy+115}else{const q=(p-.25)/.75;const L=[[cx+255,cy+115],[cx+255,cy+20],[ax+300,cy+20],[ax+300,ay+ah-5]];const d=[95,45+0,0];// piecewise
+   const segs=[[L[0],L[1]],[L[1],L[2]],[L[2],L[3]]];const lens=segs.map(s=>Math.hypot(s[1][0]-s[0][0],s[1][1]-s[0][1]));const tot=lens.reduce((a,b)=>a+b);let m=q*tot,j=0;while(j<2&&m>lens[j]){m-=lens[j];j++}const u=m/lens[j];px=segs[j][0][0]+(segs[j][1][0]-segs[j][0][0])*u;py=segs[j][0][1]+(segs[j][1][1]-segs[j][0][1])*u}
+  g.beginPath();g.arc(px,py,6,0,7);g.fill()}
+}
+function day(t){ // sun charges batteries
+ sky(false,t);
+ g.fillStyle='#F7A21B';g.beginPath();g.arc(560,200,60+4*Math.sin(t*3),0,7);g.fill();
+ for(let i=0;i<12;i++){const a=i/12*6.283+t*.5;g.strokeStyle='#F7A21B';g.lineWidth=6;g.beginPath();g.moveTo(560+Math.cos(a)*80,200+Math.sin(a)*80);g.lineTo(560+Math.cos(a)*105,200+Math.sin(a)*105);g.stroke()}
+ // building + roof panels
+ g.fillStyle='#c9d8d2';g.fillRect(180,520,360,560);g.fillStyle='#8aa39a';for(let r=0;r<12;r++)for(let c=0;c<6;c++){g.fillStyle='#fef1d9';g.fillRect(200+c*56,545+r*42,30,26)}
+ g.save();g.translate(0,0);for(let i=0;i<4;i++){const px=200+i*80;g.fillStyle='#0A3B30';g.save();g.translate(px,490);g.transform(1,0,-.35,1,0,0);g.fillRect(0,0,70,36);g.strokeStyle='#4fb59a';g.lineWidth=1;for(let k=1;k<4;k++){g.beginPath();g.moveTo(k*17.5,0);g.lineTo(k*17.5,36);g.stroke()}g.restore()}g.restore();
+ // sun rays to panels
+ g.strokeStyle='rgba(247,162,27,.6)';g.lineWidth=4;g.setLineDash([10,10]);g.lineDashOffset=-t*40;g.beginPath();g.moveTo(520,240);g.lineTo(330,480);g.stroke();g.setLineDash([]);
+ // battery bar
+ const lv=seg(t,0.3,3);g.fillStyle='#0A3B30';g.fillRect(150,1120,420,50);g.fillStyle='#05705A';g.fillRect(156,1126,408*lv,38);g.fillStyle='#fff';g.font='800 24px Figtree,Arial';g.textAlign='center';g.fillText('BATERIAS '+Math.round(lv*100)+'%',360,1155);
+}
+function endcard(t){g.fillStyle='#0A3B30';g.fillRect(0,0,W,H);const k=ease(seg(t,0,1));g.globalAlpha=k;
+ if(logo.complete){const w=240,h=w*506/454;g.drawImage(logo,W/2-w/2,330,w,h)}
+ g.fillStyle='#fff';g.font='800 64px Figtree,Arial';g.textAlign='center';g.fillText('Energia que',W/2,760);g.fillStyle='#F7A21B';g.fillText('não para.',W/2,835);
+ g.fillStyle='#DCEDE5';g.font='600 30px Figtree,Arial';g.fillText('Sistema solar híbrido com baterias',W/2,920);g.fillText('Projeto e instalação',W/2,965);g.globalAlpha=1}
+const T=22;
+window.draw=function(t){
+ g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,H);
+ if(t<9.2){ // city with camera
+  const z=1+ease(seg(t,5,9))*2.3;const fx=heroWin.x+6,fy=heroWin.y+9;
+  g.save();const k=ease(seg(t,5,9));const cx=W/2+(fx-W/2)*0,cy=H/2;
+  g.translate(W/2,H/2);g.scale(z,z);g.translate(-(W/2+(fx-W/2)*k),-(H/2+(fy-H/2)*k));city(t);g.restore();
+  txt(t,'Uma cidade inteira...',0.4,2.4,200,54);
+  txt(t,'APAGÃO.',3,5,200,84,'#F7A21B');
+  txt(t,'Mas um apartamento\ncontinua aceso.',5.2,8.6,200,50);
+ }
+ if(t>=8.7&&t<16.2){const a=seg(t,8.7,9.4);g.globalAlpha=a;if(t>=15.6)g.globalAlpha=1-seg(t,15.6,16.2);
+  room(t-8.7);g.globalAlpha=1;
+  txt(t,'O segredo?',9.5,11,90,56);
+  txt(t,'Sistema híbrido\ncom baterias.',11,16,90,54,'#F7A21B');
+  txt(t,'A energia fica guardada\npara quando a rede falhar.',12.8,15.8,1215,34,'#fff');}
+ if(t>=15.8&&t<19.6){const a=seg(t,15.8,16.4);g.globalAlpha=a;if(t>=19)g.globalAlpha=1-seg(t,19,19.6);day(t-15.8);g.globalAlpha=1;
+  txt(t,'De dia, o sol\ncarrega as baterias.',16.4,19.2,110,54,'#0A3B30');}
+ if(t>=19.4){endcard(t-19.4)}
+}
+window.ready=()=>logo.complete;
+draw(0);
+</script>
